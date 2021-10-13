@@ -12,8 +12,6 @@ loadingService.loadingStatus$.subscribe(isLoading => {
             'open'
         );
     }
-})
-
-loadingService.showLoading();
+});
 
 setTimeout(() => loadingService.hideLoading(), 3000);
