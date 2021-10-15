@@ -1,21 +1,20 @@
-import { asyncScheduler, asapScheduler, of, range } from 'rxjs';
-import { observeOn, tap } from 'rxjs/operators';
-import { observer } from './observer';
+import { animationFrameScheduler, interval } from "rxjs";
+import { takeWhile } from "rxjs/operators";
 
-// asyncScheduler.schedule(() => {
-//     console.log('5 asyncScheduler');
-// });
-// asapScheduler.schedule(() => {
-//     console.log('2 asapScheduler');
-// });
-// queueMicrotask(() => console.log(
-//     '3 from microtask'
-// ));
-// Promise.resolve('4 from promise').then(console.log);
+const ball = document.getElementById('ball');
 
-const counter = document.getElementById('counter');
+// animationFrameScheduler.schedule(function(position){
 
-range(1,100000, asyncScheduler).subscribe(val => {
-    counter.innerHTML = val
+//     ball.style.transform = `translate3d(0, ${position}px, 0)`;
+
+//     if (position <= 300) {
+//         this.schedule(position + 1);
+//     }
+    
+// }, 0, 0);
+
+interval(0, animationFrameScheduler).pipe(
+    takeWhile(val => val <= 300)
+).subscribe(val => {
+    ball.style.transform = `translate3d(0, ${val}px, 0)`;
 });
-console.log('1  synchronous console.log');
