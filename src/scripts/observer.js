@@ -1,5 +1,5 @@
 export const observer = {
     next: val => console.log('next', val),
-    error: val => console.log('error', val),
-    complete: () => console.log('complete', val)
+    error: err => console.log('error', err),
+    complete: () => console.log('complete')
 };
