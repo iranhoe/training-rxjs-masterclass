@@ -1,4 +1,5 @@
 import { TestScheduler } from "rxjs/testing";
+import { from } from 'rxjs';
 import { map, concatWith, take } from 'rxjs/operators'
 
 describe("Marble testing in RxJS", () => {
@@ -51,7 +52,6 @@ describe("Marble testing in RxJS", () => {
     })
   });
 
-
   it('should let you test hot observables', () => {
     testScheduler.run(helpers => {
       const { cold, hot, expectObservable } = helpers;
@@ -61,5 +61,15 @@ describe("Marble testing in RxJS", () => {
 
       expectObservable(final$).toBe(expected);
     })
+  });
+
+  it('should let you test synchronous operations', () => {
+    testScheduler.run(helpers => {
+      const { cold, expectObservable } = helpers;
+      const source$ = from([1,2,3,4,5]);
+      const expected = '(abcde|)';
+
+      expectObservable(source$).toBe(expected, { a:1, b:2, c:3, d:4, e:5});
+    });
   });
 });
