@@ -1,5 +1,6 @@
+import { breweryTypeahead } from "../src/scripts/debounce";
 import { TestScheduler } from "rxjs/testing";
-import { from } from 'rxjs';
+import { from, of, throwError } from 'rxjs';
 import { map, concatWith, take, delay } from 'rxjs/operators'
 
 describe("Marble testing in RxJS", () => {
@@ -83,4 +84,90 @@ describe("Marble testing in RxJS", () => {
       expectObservable(final$).toBe(expected, { a:1, b:2, c:3, d:4, e:5});
     });
   });
+});
+
+describe('The brewery typehead', () => {
+  let testScheduler;
+
+  beforeEach(() => {
+    testScheduler = new TestScheduler((actual, expected) => {
+      expect(actual).toEqual(expected);
+    })
+  });
+
+  it('should debounce input by 200ms', () => {
+    testScheduler.run(helpers => {
+      const { cold, expectObservable } = helpers;
+      const searchTerm = 'testing';
+      const source$ = cold('a', { a: { target: { value: searchTerm}}});
+      const final$ = source$.pipe(
+        breweryTypeahead({
+          getJSON: () => of(searchTerm).pipe(delay(300))
+        })
+      );
+
+      const expected = '500ms a';
+
+      expectObservable(final$).toBe(expected, { a: searchTerm});
+    })
+  });
+
+  it('should cancel active request if another value is emitted', () => {
+    testScheduler.run(helpers => {
+      const { cold, expectObservable } = helpers;
+      const searchTerm = 'testing';
+      const source$ = cold('a 250ms b', { 
+        a: { target: { value: 'first'}},
+        b: { target: { value: 'second'}}
+      });
+      const final$ = source$.pipe(
+        breweryTypeahead({
+          getJSON: () => of(searchTerm).pipe(delay(300))
+        })
+      );
+
+      const expected = '751ms b';
+
+      expectObservable(final$).toBe(expected, { b: searchTerm});
+    })
+  })
+
+  it('should not emit duplicated values in a row', () => {
+    testScheduler.run(helpers => {
+      const { cold, expectObservable } = helpers;
+      const searchTerm = 'testing';
+      const source$ = cold('a 250ms b', { 
+        a: { target: { value: 'first'}},
+        b: { target: { value: 'first'}}
+      });
+      const final$ = source$.pipe(
+        breweryTypeahead({
+          getJSON: () => of(searchTerm).pipe(delay(300))
+        })
+      );
+
+      const expected = '500ms b';
+
+      expectObservable(final$).toBe(expected, { b: searchTerm});
+    })
+  });
+
+  it('should ignore ajax error', () => {
+    testScheduler.run(helpers => {
+      const { cold, expectObservable } = helpers;
+      const source$ = cold('a 250ms b', { 
+        a: { target: { value: 'first'}},
+        b: { target: { value: 'first'}}
+      });
+      const final$ = source$.pipe(
+        breweryTypeahead({
+          getJSON: () => throwError(() => 'error')
+        })
+      );
+
+      const expected = '';
+
+      expectObservable(final$).toBe(expected);
+    })
+  })
 });
