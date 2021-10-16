@@ -10,15 +10,16 @@ const testFiles = glob.sync("./test/*.spec.js")
 module.exports = {
   entry: testFiles,
   devtool: 'inline-source-map',
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-    }
-  },
+  // optimization: {
+  //   splitChunks: {
+  //     chunks: "all",
+  //   }
+  // },
   output: {
     path: path.resolve(__dirname, "./dist/spec"),
     filename: "[name].js",
-    clean: true
+    clean: true,
+    globalObject: 'this'
   },
   mode: "none"
 };
