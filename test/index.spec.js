@@ -1,7 +1,7 @@
 import { breweryTypeahead } from "../src/scripts/debounce";
 import { TestScheduler } from "rxjs/testing";
-import { from, of, throwError } from 'rxjs';
-import { map, concatWith, take, delay } from 'rxjs/operators'
+import { from, of, throwError, interval } from 'rxjs';
+import { map, concatWith, take, delay, catchError } from 'rxjs/operators'
 
 describe("Marble testing in RxJS", () => {
   let testScheduler;
@@ -84,6 +84,38 @@ describe("Marble testing in RxJS", () => {
       expectObservable(final$).toBe(expected, { a:1, b:2, c:3, d:4, e:5});
     });
   });
+
+  it('should let you test errors and error messages', () => {
+    testScheduler.run(helpers => {
+      const { expectObservable } = helpers;
+      const source$ = of({ firstName: 'Brian', lastName: 'Smith'}, null).pipe(
+        map(o => `${o.firstName} ${o.lastName}`),
+        catchError(() => {
+          throw { message: 'Invalid user!' }
+        })
+      );
+      const expected = '(a#)';
+
+      expectObservable(source$).toBe(expected, { a: 'Brian Smith' }, { message: 'Invalid user!'});
+    });
+  });
+
+  it('should let you test snapshots of streams that do not complete', () => {
+    testScheduler.run((helpers) => {
+      const { expectObservable } = helpers;
+      const source$ = interval(1000).pipe(
+        map(val => `${val + 1}sec`)
+      )
+      const expected = '1s a 999ms b 999ms c';
+      const unsubscribe = '4s !';
+
+      expectObservable(source$, unsubscribe).toBe(expected, {
+        a: '1sec',
+        b: '2sec',
+        c: '3sec'
+      });
+    })
+  })
 });
 
 describe('The brewery typehead', () => {
